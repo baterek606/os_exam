@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Operating Systems Exam</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=DM+Sans:wght@400;500;600;700;800&display=swap');
+
+  :root {
+    --bg: #0a0c12;
+    --surface: #13161f;
+    --card: #1c2030;
+    --accent: #38bdf8;
+    --accent2: #fbbf24;
+    --accent3: #34d399;
+    --danger: #f87171;
+    --text: #e2e8f0;
+    --muted: #64748b;
+    --border: #1e2540;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+  }
+
+  .header {
+    background: linear-gradient(135deg, #13161f 0%, #0a0c12 100%);
+    border-bottom: 2px solid var(--accent);
+    padding: 24px 40px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 14px;
+  }
+
+  .header-left { display: flex; flex-direction: column; gap: 4px; }
+  .header-title {
+    font-size: 1.3rem;
+    font-weight: 800;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: -0.3px;
+  }
+  .header-sub { font-size: 0.8rem; color: var(--muted); font-family: 'JetBrains Mono', monospace; }
+
+  .score-bar { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+  .score-pill {
+    background: var(--card);
+    border: 1px solid var(--border);
+    padding: 7px 16px;
+    border-radius: 20px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 0.5px;
+  }
+  .score-pill .val { color: var(--accent); }
+  .score-pill.total .val { color: var(--accent2); }
+
+  .container { max-width: 900px; margin: 0 auto; padding: 40px 20px 100px; }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin: 52px 0 22px;
+    padding: 20px 24px;
+    background: var(--surface);
+    border-radius: 16px;
+    border-left: 5px solid var(--accent);
+  }
+  .section-header.mcq { border-left-color: var(--accent2); }
+  .section-header.essay { border-left-color: var(--accent3); }
+
+  .section-badge {
+    background: var(--accent);
+    color: #000;
+    font-weight: 800;
+    font-size: 0.75rem;
+    padding: 4px 12px;
+    border-radius: 20px;
+    letter-spacing: 1px;
+    white-space: nowrap;
+  }
+  .section-badge.mcq { background: var(--accent2); }
+  .section-badge.essay { background: var(--accent3); }
+
+  .section-info h2 { font-size: 1.2rem; font-weight: 800; }
+  .section-info p { color: var(--muted); font-size: 0.85rem; margin-top: 3px; }
+
+  /* Question Cards */
+  .question-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 22px 24px;
+    margin-bottom: 12px;
+    transition: border-color 0.2s, transform 0.15s;
+  }
+  .question-card:hover { border-color: #2e3a5a; transform: translateX(2px); }
+  .question-card.correct { border-color: var(--accent3); background: #0f1f18; }
+  .question-card.wrong { border-color: var(--danger); background: #1f0f0f; }
+
+  .q-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--surface);
+    color: var(--muted);
+    font-size: 0.72rem;
+    font-family: 'JetBrains Mono', monospace;
+    padding: 3px 10px;
+    border-radius: 6px;
+    margin-bottom: 12px;
+    letter-spacing: 0.5px;
+  }
+
+  .q-text {
+    font-size: 0.98rem;
+    line-height: 1.65;
+    font-weight: 600;
+    margin-bottom: 18px;
+    color: #cbd5e1;
+  }
+
+  /* T/F */
+  .tf-options { display: flex; gap: 10px; }
+  .tf-btn {
+    padding: 10px 30px;
+    border-radius: 10px;
+    border: 2px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.15s;
+    letter-spacing: 0.5px;
+  }
+  .tf-btn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+  .tf-btn.sel-correct { background: var(--accent3); color: #000; border-color: var(--accent3); }
+  .tf-btn.sel-wrong { background: var(--danger); color: #fff; border-color: var(--danger); }
+  .tf-btn.show-correct { background: var(--accent3); color: #000; border-color: var(--accent3); }
+
+  /* MCQ */
+  .mcq-options { display: flex; flex-direction: column; gap: 9px; }
+  .mcq-opt {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px 16px;
+    border-radius: 10px;
+    border: 2px solid var(--border);
+    background: var(--surface);
+    cursor: pointer;
+    transition: all 0.15s;
+    font-size: 0.92rem;
+    line-height: 1.5;
+  }
+  .mcq-opt:hover:not(.disabled) { border-color: var(--accent2); background: #1a1e2e; }
+  .mcq-opt.sel-correct { background: #0f1f18; border-color: var(--accent3); }
+  .mcq-opt.sel-wrong { background: #1f0f0f; border-color: var(--danger); }
+  .mcq-opt.show-correct { background: #0f1f18; border-color: var(--accent3); }
+  .mcq-opt.disabled { cursor: default; pointer-events: none; }
+
+  .opt-key {
+    min-width: 26px; height: 26px;
+    border-radius: 6px;
+    background: var(--card);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 0.75rem;
+    font-family: 'JetBrains Mono', monospace;
+    flex-shrink: 0;
+    margin-top: 1px;
+    color: var(--muted);
+  }
+
+  .feedback {
+    margin-top: 12px;
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    display: none;
+  }
+  .feedback.show { display: block; }
+  .feedback.ok { background: #0f1f18; color: var(--accent3); border: 1px solid var(--accent3); }
+  .feedback.bad { background: #1f0f0f; color: #fca5a5; border: 1px solid var(--danger); }
+
+  /* Essay */
+  .essay-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 22px 24px;
+    margin-bottom: 12px;
+  }
+  .essay-card textarea {
+    width: 100%;
+    min-height: 110px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.92rem;
+    padding: 12px;
+    resize: vertical;
+    margin-top: 12px;
+    transition: border-color 0.2s;
+    line-height: 1.6;
+  }
+  .essay-card textarea:focus { outline: none; border-color: var(--accent3); }
+  .essay-card textarea::placeholder { color: var(--muted); }
+
+  .model-answer {
+    margin-top: 12px;
+    padding: 16px;
+    background: #0d1626;
+    border: 1px solid var(--accent);
+    border-radius: 10px;
+    font-size: 0.88rem;
+    line-height: 1.85;
+    display: none;
+    color: #94a3b8;
+  }
+  .model-answer.show { display: block; }
+  .model-answer strong { color: var(--accent2); display: block; margin-bottom: 8px; }
+
+  .show-ans-btn {
+    margin-top: 10px;
+    padding: 8px 18px;
+    border-radius: 8px;
+    border: 1px solid var(--accent3);
+    background: transparent;
+    color: var(--accent3);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .show-ans-btn:hover { background: var(--accent3); color: #000; }
+
+  .submit-btn {
+    display: block;
+    margin: 44px auto 0;
+    padding: 16px 52px;
+    background: linear-gradient(135deg, var(--accent), #6366f1);
+    color: #fff;
+    border: none;
+    border-radius: 14px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 1.05rem;
+    font-weight: 800;
+    cursor: pointer;
+    transition: transform 0.2s, opacity 0.2s;
+    letter-spacing: 0.3px;
+  }
+  .submit-btn:hover { transform: scale(1.04); opacity: 0.9; }
+
+  .result-banner {
+    background: var(--surface);
+    border: 2px solid var(--accent);
+    border-radius: 18px;
+    padding: 32px;
+    text-align: center;
+    margin: 32px 0;
+    display: none;
+  }
+  .result-banner.show { display: block; }
+  .result-banner h2 { font-size: 1.9rem; font-weight: 900; margin-bottom: 10px; }
+  .result-banner p { color: var(--muted); margin-top: 6px; }
+
+  .progress-wrap { background: var(--border); height: 8px; border-radius: 4px; margin: 14px 0 8px; }
+  .progress-fill { height: 100%; border-radius: 4px; background: linear-gradient(90deg, var(--accent), var(--accent3)); transition: width 0.6s ease; }
+
+  @media (max-width: 600px) {
+    .header { padding: 14px 16px; }
+    .container { padding: 20px 12px; }
+    .tf-btn { padding: 9px 20px; }
+    .q-text { font-size: 0.93rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <div class="header-title">Operating Systems — Final Exam</div>
+    <div class="header-sub">Chapters 2–6 · Silberschatz 10th Ed.</div>
+  </div>
+  <div class="score-bar">
+    <div class="score-pill">T/F: <span class="val" id="tf-score">0</span>/50</div>
+    <div class="score-pill">MCQ: <span class="val" id="mcq-score">0</span>/50</div>
+    <div class="score-pill total">Total: <span class="val" id="total-score">0</span>/100</div>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- SECTION 1: T/F -->
+  <div class="section-header">
+    <span class="section-badge">PART 1</span>
+    <div class="section-info">
+      <h2>True / False Questions</h2>
+      <p>50 questions — Select the correct answer for each statement</p>
+    </div>
+  </div>
+  <div id="tf-container"></div>
+
+  <!-- SECTION 2: MCQ -->
+  <div class="section-header mcq">
+    <span class="section-badge mcq">PART 2</span>
+    <div class="section-info">
+      <h2>Multiple Choice Questions</h2>
+      <p>50 questions — Choose the best answer</p>
+    </div>
+  </div>
+  <div id="mcq-container"></div>
+
+  <!-- SECTION 3: ESSAY -->
+  <div class="section-header essay">
+    <span class="section-badge essay">PART 3</span>
+    <div class="section-info">
+      <h2>Essay / Short Answer Questions</h2>
+      <p>15 questions — Write your answer then reveal the model answer</p>
+    </div>
+  </div>
+  <div id="essay-container"></div>
+
+  <div class="result-banner" id="result-banner">
+    <h2 id="result-title"></h2>
+    <div class="progress-wrap"><div class="progress-fill" id="result-bar" style="width:0%"></div></div>
+    <p id="result-msg"></p>
+  </div>
+
+  <button class="submit-btn" onclick="showResult()">📊 Show Final Result</button>
+</div>
+
+<script>
+const tfData = [
+  { q: "An operating system provides an environment for program execution and services to programs and users.", ans: true },
+  { q: "CLI stands for 'Graphical User Interface'.", ans: false },
+  { q: "A System Call is a programming interface to the services provided by the OS.", ans: true },
+  { q: "The Kernel is the central core of the operating system.", ans: true },
+  { q: "A Process is simply an executable file stored on disk and never executed.", ans: false },
+  { q: "The 'Running' state means the process is waiting for an I/O event.", ans: false },
+  { q: "The PCB contains all information associated with a specific process.", ans: true },
+  { q: "A Context Switch occurs when the CPU switches execution from one process to another.", ans: true },
+  { q: "A Zombie process is one that has finished execution but whose parent has not yet called wait().", ans: true },
+  { q: "A Thread is a smaller unit of execution within a process, sharing the process resources.", ans: true },
+  { q: "In the Many-to-One multithreading model, blocking one thread blocks all threads.", ans: true },
+  { q: "The One-to-One model provides less concurrency than the Many-to-One model.", ans: false },
+  { q: "Linux refers to threads as 'Tasks'.", ans: true },
+  { q: "Parallelism means performing only one task at a time.", ans: false },
+  { q: "Concurrency means multiple tasks are making progress simultaneously.", ans: true },
+  { q: "FCFS stands for 'First Come, First Served'.", ans: true },
+  { q: "SJF scheduling gives the minimum average waiting time for a given set of processes.", ans: true },
+  { q: "Round Robin scheduling uses a time quantum to distribute CPU time.", ans: true },
+  { q: "In Priority Scheduling, the process with the highest priority number gets the CPU first.", ans: false },
+  { q: "Starvation occurs when low-priority processes may never get to execute.", ans: true },
+  { q: "Aging is a solution to starvation by gradually increasing the priority of waiting processes.", ans: true },
+  { q: "The Dispatcher is responsible for selecting the next process from the ready queue.", ans: false },
+  { q: "Dispatch Latency is the time it takes to stop one process and start another running.", ans: true },
+  { q: "Preemptive Scheduling allows the OS to forcibly remove the CPU from a running process.", ans: true },
+  { q: "In Nonpreemptive Scheduling, a process holds the CPU until it terminates or enters a waiting state.", ans: true },
+  { q: "A Race Condition occurs when multiple processes access shared data concurrently.", ans: true },
+  { q: "A Critical Section is a segment of code that accesses shared resources.", ans: true },
+  { q: "A Semaphore is a synchronization tool that uses wait() and signal() operations.", ans: true },
+  { q: "A Deadlock occurs when all processes complete successfully.", ans: false },
+  { q: "Starvation and Deadlock are both examples of Liveness failures.", ans: true },
+  { q: "The GUI was invented at Xerox PARC.", ans: true },
+  { q: "API stands for Application Programming Interface.", ans: true },
+  { q: "The POSIX API is used exclusively with Windows operating systems.", ans: false },
+  { q: "Most users' view of the OS is defined by system programs, not the actual system calls.", ans: true },
+  { q: "Background services (daemons) run in kernel context, not user context.", ans: false },
+  { q: "The Bootstrap Loader is stored in ROM and is responsible for loading the Kernel into memory.", ans: true },
+  { q: "UEFI has replaced BIOS in modern computer systems.", ans: true },
+  { q: "A Core Dump file captures the memory of a process at the time of a crash.", ans: true },
+  { q: "NUMA stands for Non-Uniform Memory Access.", ans: true },
+  { q: "Load Balancing aims to distribute workload evenly across all processors.", ans: true },
+  { q: "Hard Affinity allows a process to specify the exact set of processors it may run on.", ans: true },
+  { q: "Soft real-time systems guarantee that critical tasks are always serviced before their deadline.", ans: false },
+  { q: "EDF stands for Earliest Deadline First.", ans: true },
+  { q: "Rate Monotonic Scheduling assigns higher priority to processes with longer periods.", ans: false },
+  { q: "Thread-Local Storage (TLS) provides each thread with its own private copy of data.", ans: true },
+  { q: "Scheduler Activations use a Lightweight Process (LWP) as an intermediary between user and kernel threads.", ans: true },
+  { q: "An Orphan process is one whose parent has terminated without calling wait().", ans: true },
+  { q: "Message Passing is one of the primary methods for Inter-Process Communication (IPC).", ans: true },
+  { q: "Bounded Capacity buffering means there is no limit on the number of messages in the queue.", ans: false },
+  { q: "Cascading Termination means all child processes are terminated when their parent terminates.", ans: true },
+];
+
+const mcqData = [
+  { q: "Which of the following is NOT a user-oriented OS service?", opts: ["User Interface", "Program Execution", "Hardware Manufacturing", "I/O Operations"], ans: 2 },
+  { q: "Which statement best describes the difference between CLI and GUI?", opts: ["CLI uses icons; GUI uses typed commands", "CLI uses typed commands; GUI uses a graphical desktop metaphor", "Both are identical in functionality", "CLI is always faster than GUI"], ans: 1 },
+  { q: "Which API is used with POSIX-based systems such as Linux and macOS?", opts: ["Win32 API", "Java API", "POSIX API", "Android API"], ans: 2 },
+  { q: "How does Linux pass system call parameters to the OS?", opts: ["Directly via registers only", "Via a table in memory with its address passed in a register", "Via a network socket", "Parameters cannot be passed to the OS"], ans: 1 },
+  { q: "Which of the following is a valid category of System Calls?", opts: ["File Management", "Network Card Design", "Hardware Fabrication", "UI Prototyping"], ans: 0 },
+  { q: "What is the Process Control Block (PCB)?", opts: ["A hardware component on the CPU", "A data structure containing all information about a process", "A type of main memory", "A network protocol"], ans: 1 },
+  { q: "Which process state indicates the process is waiting for an I/O event to complete?", opts: ["Running", "Ready", "Waiting", "New"], ans: 2 },
+  { q: "What is the primary goal of the Process Scheduler?", opts: ["Manage the file system", "Maximize CPU utilization", "Minimize memory usage", "Control printer output"], ans: 1 },
+  { q: "A Context Switch is considered:", opts: ["Always beneficial to system performance", "Pure overhead — no useful work is done during switching", "A method to delete processes", "A way to terminate processes"], ans: 1 },
+  { q: "Which multithreading model provides the highest degree of concurrency?", opts: ["Many-to-One", "One-to-One", "Many-to-Many", "Zero-to-One"], ans: 1 },
+  { q: "What is the key difference between Parallelism and Concurrency?", opts: ["No difference", "Parallelism = simultaneous execution; Concurrency = multiple tasks making progress", "Concurrency requires multi-core hardware", "Parallelism only works on a single core"], ans: 1 },
+  { q: "What is the main disadvantage of the Many-to-One multithreading model?", opts: ["It consumes too much memory", "Blocking one thread blocks all threads in the process", "It is not supported by any OS", "Threads cannot be created"], ans: 1 },
+  { q: "Which scheduling algorithm is optimal in terms of minimum average waiting time?", opts: ["FCFS", "Round Robin", "SJF", "Priority Scheduling"], ans: 2 },
+  { q: "What is the Convoy Effect in FCFS scheduling?", opts: ["Short processes execute before long ones", "Short processes get stuck waiting behind a long CPU-bound process", "All processes execute at the same time", "The CPU becomes idle frequently"], ans: 1 },
+  { q: "In Round Robin scheduling, what is a Time Quantum?", opts: ["A unit of memory", "The fixed time slice each process is allowed to run before preemption", "A file size unit", "The number of threads per process"], ans: 1 },
+  { q: "How is Starvation solved in Priority Scheduling?", opts: ["By deleting low-priority processes", "By Aging — gradually increasing the priority of waiting processes", "By restarting the system", "By increasing RAM"], ans: 1 },
+  { q: "Dispatch Latency is defined as:", opts: ["The time to create a new process", "The time for the dispatcher to stop one process and start another", "The time to load the OS", "The size of the PCB"], ans: 1 },
+  { q: "In EDF (Earliest Deadline First) scheduling, which process gets highest priority?", opts: ["The process with the longest burst time", "The process with the nearest (earliest) deadline", "The process that arrived first", "The process with the lowest priority number"], ans: 1 },
+  { q: "What is the key difference between Soft and Hard Real-Time systems?", opts: ["No difference", "Hard RT guarantees deadlines are met; Soft RT gives high priority but no guarantee", "Soft RT is always faster", "Hard RT is only for mobile devices"], ans: 1 },
+  { q: "NUMA stands for:", opts: ["A type of file system", "Non-Uniform Memory Access", "Network Unified Memory Architecture", "A thread scheduling model"], ans: 1 },
+  { q: "What is the purpose of Load Balancing in multiprocessor systems?", opts: ["To reduce CPU usage", "To keep workload evenly distributed across all processors", "To increase memory capacity", "To speed up I/O operations"], ans: 1 },
+  { q: "What is the difference between Hard Affinity and Soft Affinity?", opts: ["No difference", "Hard guarantees a thread runs on the same processor; Soft attempts it without guarantees", "Soft affinity is faster", "Hard affinity is only for Linux"], ans: 1 },
+  { q: "What is the Bootstrap Loader?", opts: ["A text editor built into the OS", "A small piece of code stored in ROM that loads the Kernel and starts it", "A type of thread", "A database management system"], ans: 1 },
+  { q: "What does UEFI replace in modern systems?", opts: ["The file system", "BIOS — Unified Extensible Firmware Interface replaces traditional BIOS", "The OS Kernel", "The CPU scheduler"], ans: 1 },
+  { q: "In OS structure, what is a Microkernel?", opts: ["A large kernel containing all OS services", "A small kernel with only basic services, using Message Passing for communication", "A type of GUI", "A hardware abstraction layer only"], ans: 1 },
+  { q: "Which of the following is an example of a System Program?", opts: ["Microsoft Excel", "A built-in text editor provided by the OS", "A video game", "A commercial database application"], ans: 1 },
+  { q: "What is Cascading Termination?", opts: ["Only the parent process is terminated", "All child (and grandchild) processes are terminated when the parent terminates", "Data is transferred between processes", "Memory is divided among processes"], ans: 1 },
+  { q: "What is the difference between a Zombie and an Orphan process?", opts: ["No difference", "Zombie: finished but parent didn't call wait(). Orphan: parent terminated without wait()", "Orphan processes are more dangerous", "Both always cause a Deadlock"], ans: 1 },
+  { q: "Which type of buffering has Zero Capacity?", opts: ["Bounded Capacity", "Unbounded Capacity", "Zero Capacity — sender must wait for receiver (rendezvous)", "Infinite Capacity"], ans: 2 },
+  { q: "In UNIX, what is a Signal?", opts: ["A type of file", "A notification sent to a process that a particular event has occurred", "A CLI command", "A type of thread"], ans: 1 },
+  { q: "What is Thread Cancellation?", opts: ["Creating a new thread", "Terminating a thread before it has finished its task", "Temporarily suspending a thread", "Moving a thread between CPU cores"], ans: 1 },
+  { q: "What is the key difference between Asynchronous and Deferred Thread Cancellation?", opts: ["No difference", "Async terminates the target thread immediately; Deferred waits for a cancellation point", "Deferred is faster", "Async is safer for shared resources"], ans: 1 },
+  { q: "What is a Scheduler Activation?", opts: ["A standalone scheduling program", "A communication mechanism from the kernel to the thread library to maintain the correct number of kernel threads", "A type of semaphore", "A method for memory allocation"], ans: 1 },
+  { q: "In the context of threads, what does TLS stand for?", opts: ["Transport Layer Security", "Thread-Local Storage — a private copy of data unique to each thread", "Thread Library System", "Time-Limited Scheduling"], ans: 1 },
+  { q: "Which type of parallelism distributes subsets of the same data across multiple cores?", opts: ["Task Parallelism", "Data Parallelism", "Thread Parallelism", "Process Parallelism"], ans: 1 },
+  { q: "What is an LWP (Lightweight Process) in the context of threading?", opts: ["A Linux Web Protocol", "An intermediate data structure between user threads and kernel threads", "A type of PCB", "A Microkernel layer"], ans: 1 },
+  { q: "Which threading model allows a user thread to be bound to a specific kernel thread?", opts: ["Many-to-One", "One-to-One", "Two-Level (Hybrid) Model", "Zero-to-Many"], ans: 2 },
+  { q: "In Windows threads, what does ETHREAD (Executive Thread Block) contain?", opts: ["A pointer to the process it belongs to and to the KTHREAD", "A type of API reference", "A security protocol", "A file system entry"], ans: 0 },
+  { q: "How does Linux create threads?", opts: ["Via a thread() system call", "Via the clone() system call", "Via fork() only", "Via exec()"], ans: 1 },
+  { q: "What is Intel's Chip-Multithreading (CMT) technology also known as?", opts: ["A cache type", "Hyperthreading — assigning multiple hardware threads per core", "A RAM technology", "A cooling technique"], ans: 1 },
+  { q: "On a quad-core system with 2 hardware threads per core, how many logical processors does the OS see?", opts: ["4", "6", "8", "16"], ans: 2 },
+  { q: "What is Pull Migration in Load Balancing?", opts: ["Pushing tasks from an overloaded processor", "An idle processor pulling a waiting task from a busy processor", "A type of scheduling algorithm", "Deleting excess processes"], ans: 1 },
+  { q: "In Rate Monotonic Scheduling, how are priorities assigned?", opts: ["Processes with longer periods get higher priority", "Processes with shorter periods get higher priority", "Priority is based on deadline only", "Priorities are assigned randomly"], ans: 1 },
+  { q: "What is Interrupt Latency?", opts: ["The time of a context switch", "The time from the arrival of an interrupt to the start of the interrupt service routine", "The time to load the OS", "The time to create a process"], ans: 1 },
+  { q: "What is the main goal of Process Synchronization?", opts: ["To speed up the network", "To ensure the orderly execution of cooperating processes accessing shared data", "To reduce memory usage", "To increase the number of threads"], ans: 1 },
+  { q: "What is Priority Inversion?", opts: ["A high-priority process is given the CPU last", "A lower-priority process holds a resource needed by a higher-priority process", "Reversing the priority order in the queue", "An error in priority calculation"], ans: 1 },
+  { q: "What is the standard solution to Priority Inversion?", opts: ["Restart the system", "Priority-Inheritance Protocol", "Increase the Time Quantum", "Switch to FCFS"], ans: 1 },
+  { q: "What is the fundamental difference between User-Level and Kernel-Level Threads?", opts: ["No performance difference", "User-Level: managed by a user-space library; Kernel-Level: supported directly by the OS", "Kernel-Level threads are always slower", "User-Level threads require kernel privileges"], ans: 1 },
+  { q: "Which of the following is an example of a Kernel-Level Thread implementation?", opts: ["GNU Portable Threads", "Solaris Green Threads", "Windows and Linux native threads", "Java threads only"], ans: 2 },
+  { q: "In scheduling criteria, what is Throughput?", opts: ["The CPU response time", "The number of processes that complete execution per unit of time", "The waiting time in the ready queue", "The amount of memory used"], ans: 1 },
+];
+
+const essayData = [
+  {
+    q: "Describe the OS services that ensure efficient system operation (Resource Allocation, Logging, Protection & Security). Why are these distinct from user-oriented services?",
+    model: "These services exist to ensure the efficient operation of the system itself via resource sharing, not to directly help the user. Resource Allocation distributes CPU cycles, memory, and I/O devices among concurrent processes. Logging tracks which users consume which resources for accounting purposes. Protection & Security ensures controlled access to system resources and defends against unauthorized external access through user authentication and access control."
+  },
+  {
+    q: "Compare and contrast CLI, GUI, and Touchscreen interfaces. Include a real-world example of an OS that uses each.",
+    model: "CLI (Command-Line Interface) allows direct text command entry, implemented either in the kernel or as a shell program (e.g., Bash in Linux/Unix). GUI (Graphical User Interface) uses a desktop metaphor with icons, windows, and a mouse — invented at Xerox PARC (e.g., Windows, macOS Aqua). Touchscreen interfaces replace the mouse with gestures and a virtual keyboard, using voice commands as well (e.g., iOS, Android). Many systems provide both CLI and GUI (macOS provides Aqua GUI + Unix terminal)."
+  },
+  {
+    q: "Explain the System Call implementation mechanism. How are details hidden from the programmer, and what role does the run-time support library play?",
+    model: "Each system call has an associated number. The system-call interface maintains a table indexed by these numbers. When a program invokes an API call, the interface invokes the correct kernel system call and returns the status and return values. The programmer only needs to obey the API and understand what the OS will do — all internal implementation details are hidden. The run-time support library (built into compiler libraries) manages this interface transparently."
+  },
+  {
+    q: "Draw and explain the Process State Diagram. Under what conditions does a process transition between each state?",
+    model: "States: New (process being created), Ready (waiting for CPU assignment), Running (instructions executing), Waiting (waiting for an I/O event or signal), Terminated (finished execution). Transitions: New→Ready: admitted by OS. Ready→Running: scheduler selects it. Running→Waiting: process requests I/O or waits for an event. Waiting→Ready: I/O completes or event occurs. Running→Ready: preempted by scheduler. Running→Terminated: process finishes or is aborted."
+  },
+  {
+    q: "What is the Process Control Block (PCB)? List its fields and explain why it is critical to the Context Switch mechanism.",
+    model: "The PCB (also called Task Control Block) is the OS data structure representing a process. Fields include: Process State, Program Counter, CPU Registers, CPU Scheduling Information (priorities, queue pointers), Memory-Management Information, Accounting Information (CPU used, time elapsed), and I/O Status Information (allocated devices, open files). In a Context Switch, the OS saves the complete state of the outgoing process into its PCB and loads the saved state of the incoming process from its PCB, enabling seamless resumption. Context switch time is pure overhead."
+  },
+  {
+    q: "Compare the three multithreading models (Many-to-One, One-to-One, Many-to-Many) in terms of concurrency, blocking behavior, and real-world examples.",
+    model: "Many-to-One: maps many user threads to one kernel thread. Simple but blocking one thread blocks all; cannot run in parallel on multicore. Examples: Solaris Green Threads, GNU Portable Threads. One-to-One: each user thread maps to a kernel thread. Higher concurrency, true parallelism on multicore, but overhead limits thread count. Examples: Windows, Linux. Many-to-Many: many user threads mapped to many kernel threads. Flexible, avoids blocking issue, allows OS to create sufficient kernel threads. Example: Windows with ThreadFiber package. Two-Level Model: variant of M:M that also allows a user thread to be bound to a specific kernel thread."
+  },
+  {
+    q: "A professor argues that Preemptive Scheduling is always superior to Nonpreemptive Scheduling. Do you agree? Support your answer with technical reasoning and examples.",
+    model: "Partially agree. Preemptive scheduling (used by Windows, Linux, macOS) allows the OS to reclaim the CPU from a running process, enabling better responsiveness, fairness, and support for interactive systems. However, it introduces complexity: it can lead to Race Conditions when processes share data (since a process may be preempted mid-update). Nonpreemptive is simpler and avoids race conditions but suffers from the Convoy Effect (in FCFS) and poor responsiveness. For interactive and real-time systems, preemptive is clearly superior. For simple batch systems, nonpreemptive may suffice."
+  },
+  {
+    q: "Explain the FCFS, SJF, and Round Robin scheduling algorithms. For Round Robin, discuss the effect of Time Quantum size on system performance.",
+    model: "FCFS: processes execute in arrival order. Simple but causes Convoy Effect (average wait = 17ms if P1(24), P2(3), P3(3) arrive in that order). SJF: shortest burst time runs first. Optimal average waiting time (avg = 7ms for P1(6), P2(8), P3(7), P4(3)). Round Robin: each process gets a time quantum q before preemption. If q is large → degenerates to FCFS. If q is small → very high context-switch overhead. Ideal q is large relative to context-switch time (typically 10–100ms). RR gives better response time than SJF but typically higher average turnaround."
+  },
+  {
+    q: "What is the Multilevel Feedback Queue scheduler? How does it differ from a standard Multilevel Queue, and what parameters define it?",
+    model: "Standard Multilevel Queue: fixed queues, each process permanently assigned to one queue (e.g., interactive vs. batch). No movement between queues. Multilevel Feedback Queue: processes can move between queues based on their behavior (CPU-bound vs. I/O-bound). Defined by: (1) number of queues, (2) scheduling algorithm per queue, (3) criteria for upgrading a process, (4) criteria for demoting a process, (5) how to determine which queue a new process enters. Aging can be implemented by gradually moving long-waiting processes to higher-priority queues."
+  },
+  {
+    q: "Define a Race Condition and a Critical Section. Explain the three requirements (Mutual Exclusion, Progress, Bounded Waiting) that a correct Critical Section solution must satisfy.",
+    model: "Race Condition: two or more processes access and manipulate shared data concurrently, and the outcome depends on the order of execution — leading to data inconsistency. Critical Section: a code segment that accesses shared resources; only one process may execute it at a time. Three requirements: (1) Mutual Exclusion — if process Pi is in its critical section, no other process may enter theirs. (2) Progress — if no process is in its critical section and some processes wish to enter, the selection cannot be postponed indefinitely. (3) Bounded Waiting — a bound must exist on the number of times other processes may enter before a waiting process is granted access."
+  },
+  {
+    q: "What is a Deadlock? State and explain the four necessary conditions (Coffman conditions) for deadlock to occur.",
+    model: "Deadlock: a set of processes are all waiting indefinitely for resources held by other processes in the set — none can proceed. The four necessary conditions (all must hold simultaneously): (1) Mutual Exclusion: at least one resource is held in a non-sharable mode. (2) Hold and Wait: a process holds at least one resource and is waiting to acquire additional resources held by other processes. (3) No Preemption: resources cannot be forcibly taken from a process; they must be released voluntarily. (4) Circular Wait: a circular chain of processes exists where each process waits for a resource held by the next process in the chain."
+  },
+  {
+    q: "Explain Thread-Local Storage (TLS) in detail. How does it differ from local variables and static data, and when is it particularly useful?",
+    model: "TLS allows each thread to have its own private copy of data, independent of other threads. Unlike local variables (visible only within a single function invocation and destroyed when the function returns), TLS data persists across multiple function invocations within the same thread. Unlike static data (shared across all threads), TLS is unique to each thread. It is particularly useful when using thread pools, where the programmer does not control thread creation, and when a library function needs per-thread state without using synchronization. In C, declared with __thread or thread_local keyword."
+  },
+  {
+    q: "Explain Processor Affinity (Soft vs. Hard) and its relationship to cache performance in SMP systems. Why does Load Balancing sometimes conflict with Affinity?",
+    model: "Processor Affinity: the tendency for a thread to prefer running on the same processor it previously ran on, to exploit warm cache data. Soft Affinity: OS attempts to keep a thread on the same processor but makes no guarantee — migration may occur during load balancing. Hard Affinity: a process specifies a set of processors it may run on (e.g., via sched_setaffinity() in Linux). Cache performance: when a thread migrates to a different processor, all cached memory accesses are lost, causing cache misses and performance degradation. Conflict with Load Balancing: load balancing may migrate threads to distribute work evenly, but this violates affinity and degrades cache performance — a fundamental trade-off in SMP design."
+  },
+  {
+    q: "Compare Rate Monotonic Scheduling (RMS) and Earliest Deadline First (EDF) for real-time systems. Under what conditions might RMS fail while EDF succeeds?",
+    model: "Rate Monotonic Scheduling (RMS): static priority assignment based on period — shorter period = higher priority. Optimal among fixed-priority preemptive algorithms. Limitation: may fail to schedule all processes even when CPU utilization is below 100% (theoretical upper bound ≈ 69% for n→∞ tasks). Earliest Deadline First (EDF): dynamic priority — the process with the nearest deadline gets highest priority. Theoretically optimal — can achieve 100% CPU utilization. More complex to implement than RMS. RMS fails when: a new process arrives with a short period that preempts a critical longer-period process past its deadline (as shown in the missed deadline example at t=80). EDF handles this dynamically by reassigning priorities based on current deadlines."
+  },
+  {
+    q: "Explain the OS Debugging tools and techniques discussed in the chapter. What is the significance of Kernighan's Law in the context of OS development?",
+    model: "OS Debugging involves: Log files — the OS generates error logs for post-mortem analysis. Core Dump — captures the memory of a failed application process for debugging. Crash Dump — captures kernel memory when the OS itself fails. Performance Tuning — removes bottlenecks using tools like 'top' (Linux) or Task Manager (Windows). Profiling — periodic sampling of the instruction pointer to identify statistical hot spots in code. Trace listings record system activities for later analysis. Kernighan's Law: 'Debugging is twice as hard as writing the code in the first place. Therefore, if you write the code as cleverly as possible, you are, by definition, not smart enough to debug it.' This highlights that overly complex OS code becomes impossible to maintain or debug — a strong argument for clean, readable kernel design (supporting the case for microkernel architecture)."
+  },
+];
+
+// ===== STATE =====
+let tfScore = 0, mcqScore = 0;
+const tfDone = {}, mcqDone = {};
+
+// ===== RENDER T/F =====
+function renderTF() {
+  const c = document.getElementById('tf-container');
+  tfData.forEach((item, i) => {
+    const d = document.createElement('div');
+    d.className = 'question-card';
+    d.id = `tf-${i}`;
+    d.innerHTML = `
+      <div class="q-tag">Q${String(i+1).padStart(2,'0')} · TRUE / FALSE</div>
+      <div class="q-text">${item.q}</div>
+      <div class="tf-options">
+        <button class="tf-btn" onclick="doTF(${i},true)">TRUE</button>
+        <button class="tf-btn" onclick="doTF(${i},false)">FALSE</button>
+      </div>
+      <div class="feedback" id="tf-fb-${i}"></div>`;
+    c.appendChild(d);
+  });
+}
+
+function doTF(i, answer) {
+  if (tfDone[i]) return;
+  tfDone[i] = true;
+  const correct = tfData[i].ans;
+  const card = document.getElementById(`tf-${i}`);
+  const btns = card.querySelectorAll('.tf-btn');
+  const fb = document.getElementById(`tf-fb-${i}`);
+  btns.forEach(b => b.disabled = true);
+  btns[correct ? 0 : 1].classList.add('show-correct');
+  if (answer === correct) {
+    btns[answer ? 0 : 1].classList.add('sel-correct');
+    card.classList.add('correct');
+    fb.className = 'feedback show ok';
+    fb.innerHTML = '✓ Correct!';
+    tfScore++;
+    document.getElementById('tf-score').textContent = tfScore;
+  } else {
+    btns[answer ? 0 : 1].classList.add('sel-wrong');
+    card.classList.add('wrong');
+    fb.className = 'feedback show bad';
+    fb.innerHTML = `✗ Incorrect. The correct answer is: <strong>${correct ? 'TRUE' : 'FALSE'}</strong>`;
+  }
+  document.getElementById('total-score').textContent = tfScore + mcqScore;
+}
+
+// ===== RENDER MCQ =====
+function renderMCQ() {
+  const c = document.getElementById('mcq-container');
+  const keys = ['A', 'B', 'C', 'D'];
+  mcqData.forEach((item, i) => {
+    const d = document.createElement('div');
+    d.className = 'question-card';
+    d.id = `mcq-${i}`;
+    const opts = item.opts.map((o, j) => `
+      <div class="mcq-opt" id="mcq-${i}-${j}" onclick="doMCQ(${i},${j})">
+        <div class="opt-key">${keys[j]}</div><div>${o}</div>
+      </div>`).join('');
+    d.innerHTML = `
+      <div class="q-tag">Q${String(i+1).padStart(2,'0')} · MULTIPLE CHOICE</div>
+      <div class="q-text">${item.q}</div>
+      <div class="mcq-options">${opts}</div>
+      <div class="feedback" id="mcq-fb-${i}"></div>`;
+    c.appendChild(d);
+  });
+}
+
+function doMCQ(i, choice) {
+  if (mcqDone[i]) return;
+  mcqDone[i] = true;
+  const correct = mcqData[i].ans;
+  const keys = ['A', 'B', 'C', 'D'];
+  const card = document.getElementById(`mcq-${i}`);
+  const fb = document.getElementById(`mcq-fb-${i}`);
+  mcqData[i].opts.forEach((_, j) => document.getElementById(`mcq-${i}-${j}`).classList.add('disabled'));
+  document.getElementById(`mcq-${i}-${correct}`).classList.add('show-correct');
+  if (choice === correct) {
+    document.getElementById(`mcq-${i}-${choice}`).classList.add('sel-correct');
+    card.classList.add('correct');
+    fb.className = 'feedback show ok';
+    fb.innerHTML = '✓ Correct!';
+    mcqScore++;
+    document.getElementById('mcq-score').textContent = mcqScore;
+  } else {
+    document.getElementById(`mcq-${i}-${choice}`).classList.add('sel-wrong');
+    card.classList.add('wrong');
+    fb.className = 'feedback show bad';
+    fb.innerHTML = `✗ Incorrect. Correct answer: <strong>${keys[correct]}</strong> — ${mcqData[i].opts[correct]}`;
+  }
+  document.getElementById('total-score').textContent = tfScore + mcqScore;
+}
+
+// ===== RENDER ESSAY =====
+function renderEssay() {
+  const c = document.getElementById('essay-container');
+  essayData.forEach((item, i) => {
+    const d = document.createElement('div');
+    d.className = 'essay-card';
+    d.innerHTML = `
+      <div class="q-tag">Q${String(i+1).padStart(2,'0')} · ESSAY</div>
+      <div class="q-text">${item.q}</div>
+      <textarea placeholder="Write your answer here..."></textarea>
+      <button class="show-ans-btn" onclick="toggleModel(${i})">📖 Show Model Answer</button>
+      <div class="model-answer" id="essay-model-${i}">
+        <strong>Model Answer:</strong>${item.model}
+      </div>`;
+    c.appendChild(d);
+  });
+}
+
+function toggleModel(i) {
+  document.getElementById(`essay-model-${i}`).classList.toggle('show');
+}
+
+function showResult() {
+  const total = tfScore + mcqScore;
+  const banner = document.getElementById('result-banner');
+  document.getElementById('result-bar').style.width = total + '%';
+  let title, msg;
+  if (total >= 90) { title = `🏆 Excellent! ${total}/100`; msg = 'Outstanding performance. You have a strong command of OS concepts.'; }
+  else if (total >= 75) { title = `🎉 Very Good! ${total}/100`; msg = 'Great work. Review the questions you missed and consolidate your knowledge.'; }
+  else if (total >= 60) { title = `📚 Good — ${total}/100`; msg = 'Solid foundation. Focus on the weak areas, especially synchronization and scheduling.'; }
+  else { title = `💪 Needs Review — ${total}/100`; msg = 'Go back through the material. Start with Process Management and Scheduling algorithms.'; }
+  document.getElementById('result-title').textContent = title;
+  document.getElementById('result-msg').textContent = msg;
+  banner.classList.add('show');
+  banner.scrollIntoView({ behavior: 'smooth' });
+}
+
+renderTF(); renderMCQ(); renderEssay();
+</script>
+</body>
+</html>
